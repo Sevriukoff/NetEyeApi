@@ -4,6 +4,12 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.0" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    </ItemGroup>
 
 </Project>
