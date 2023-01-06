@@ -55,7 +55,7 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TechEquipmentTechSoft_TechEquipmentsId",
+                name: "IX_TechEquipmentTechSoft_TechEquipmentId",
                 table: "TechEquipmentTechSoft",
                 column: "TechEquipmentId");
         }

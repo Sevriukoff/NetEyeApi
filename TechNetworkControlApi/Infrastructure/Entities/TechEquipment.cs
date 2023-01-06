@@ -7,5 +7,5 @@ public class TechEquipment
     public string Id { get; set; }
     public string IpAddress { get; set; }
     public TechType Type { get; set; }
-    public ICollection<TechSoft> Softs { get; set; }
+    public ICollection<TechEquipmentTechSoft> Softs { get; set; }
 }

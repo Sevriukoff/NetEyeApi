@@ -56,8 +56,6 @@ public class RepairRequestController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Put([FromBody] RepairRequestDto repairRequestDto)
     {
-        throw new Exception("Status code is 500");
-        
         var repairRequest = await ServerDbContext.RepairRequests.FindAsync(repairRequestDto.Id);
 
         if (repairRequest == null)

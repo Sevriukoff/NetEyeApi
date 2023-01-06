@@ -19,21 +19,6 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                 .HasAnnotation("ProductVersion", "6.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("TechEquipmentTechSoft", b =>
-                {
-                    b.Property<int>("SoftsId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TechEquipmentsId")
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("SoftsId", "TechEquipmentsId");
-
-                    b.HasIndex("TechEquipmentsId");
-
-                    b.ToTable("TechEquipmentTechSoft");
-                });
-
             modelBuilder.Entity("TechNetworkControlApi.Infrastructure.Entities.RepairRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -91,6 +76,24 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TechEquipments");
+                });
+
+            modelBuilder.Entity("TechNetworkControlApi.Infrastructure.Entities.TechEquipmentTechSoft", b =>
+                {
+                    b.Property<string>("TechEquipmentId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("TechSoftId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("InstalledDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("TechEquipmentId", "TechSoftId");
+
+                    b.HasIndex("TechSoftId");
+
+                    b.ToTable("TechEquipmentTechSoft");
                 });
 
             modelBuilder.Entity("TechNetworkControlApi.Infrastructure.Entities.TechSoft", b =>
@@ -162,21 +165,6 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("TechEquipmentTechSoft", b =>
-                {
-                    b.HasOne("TechNetworkControlApi.Infrastructure.Entities.TechSoft", null)
-                        .WithMany()
-                        .HasForeignKey("SoftsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TechNetworkControlApi.Infrastructure.Entities.TechEquipment", null)
-                        .WithMany()
-                        .HasForeignKey("TechEquipmentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("TechNetworkControlApi.Infrastructure.Entities.RepairRequest", b =>
                 {
                     b.HasOne("TechNetworkControlApi.Infrastructure.Entities.TechEquipment", "TechEquipment")
@@ -200,6 +188,35 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                     b.Navigation("UserFrom");
 
                     b.Navigation("UserTo");
+                });
+
+            modelBuilder.Entity("TechNetworkControlApi.Infrastructure.Entities.TechEquipmentTechSoft", b =>
+                {
+                    b.HasOne("TechNetworkControlApi.Infrastructure.Entities.TechEquipment", "TechEquipment")
+                        .WithMany("Softs")
+                        .HasForeignKey("TechEquipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechNetworkControlApi.Infrastructure.Entities.TechSoft", "TechSoft")
+                        .WithMany("TechEquipments")
+                        .HasForeignKey("TechSoftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TechEquipment");
+
+                    b.Navigation("TechSoft");
+                });
+
+            modelBuilder.Entity("TechNetworkControlApi.Infrastructure.Entities.TechEquipment", b =>
+                {
+                    b.Navigation("Softs");
+                });
+
+            modelBuilder.Entity("TechNetworkControlApi.Infrastructure.Entities.TechSoft", b =>
+                {
+                    b.Navigation("TechEquipments");
                 });
 
             modelBuilder.Entity("TechNetworkControlApi.Infrastructure.Entities.User", b =>

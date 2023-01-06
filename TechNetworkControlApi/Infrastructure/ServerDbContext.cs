@@ -36,5 +36,6 @@ public class ServerDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RepairRequestTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TechEquipmentTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TechSoftTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new TechEquipmentTechSoftTypeConfiguration());
     }
 }
