@@ -2,7 +2,8 @@
 
 public enum RepairRequestStatus
 {
-    One,
-    Two,
-    Three
+    Accepted,
+    Working,
+    Finished,
+    Cancelled
 }

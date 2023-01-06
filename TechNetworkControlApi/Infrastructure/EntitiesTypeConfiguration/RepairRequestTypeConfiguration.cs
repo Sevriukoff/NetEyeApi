@@ -13,7 +13,7 @@ public class RepairRequestTypeConfiguration : IEntityTypeConfiguration<RepairReq
     {
         builder.HasKey(x => x.Id);
         
-        builder.Property<int>("UserToId");
+        builder.Property<int?>("UserToId").IsRequired(false);
         
         builder.HasOne(x => x.UserTo)
             .WithMany(x => x.RepairRequestsReceived)
