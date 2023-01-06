@@ -17,6 +17,7 @@ public class TechEquipmentTypeConfiguration : IEntityTypeConfiguration<TechEquip
             .HasConversion(x => x.ToString(),
                 x => Enum.Parse<TechType>(x));
 
-        builder.HasMany(x => x.Softs);
+        builder.HasMany(x => x.Softs)
+            .WithMany(x => x.TechEquipments);
     }
 }
