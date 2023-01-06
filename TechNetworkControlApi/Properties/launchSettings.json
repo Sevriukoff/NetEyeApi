@@ -11,7 +11,7 @@
     "TechNetworkControlApi": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
+      "launchBrowser": false,
       "applicationUrl": "http://192.168.0.107:7119",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"

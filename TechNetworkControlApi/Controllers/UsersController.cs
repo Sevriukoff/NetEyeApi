@@ -28,4 +28,12 @@ public class UsersController : ControllerBase
 
         return user != null ? Ok(user) : NotFound(user);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody] User user)
+    {
+        await ServerDbContext.Users.AddAsync(user);
+        await ServerDbContext.SaveChangesAsync();
+        return Ok();
+    }
 }

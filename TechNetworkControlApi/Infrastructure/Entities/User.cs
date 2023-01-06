@@ -1,4 +1,10 @@
-﻿namespace TechNetworkControlApi.Infrastructure.Entities;
+﻿// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+
+using TechNetworkControlApi.Infrastructure.Enums;
+
+#pragma warning disable CS8618
+namespace TechNetworkControlApi.Infrastructure.Entities;
 
 public class User
 {
@@ -9,6 +15,9 @@ public class User
     public string LastName { get; set; }
     public string? Patronymic { get; set; }
     public string Phone { get; set; }
+    public UserRole Role { get; set; }
+    public ICollection<RepairRequest>? RepairRequestsSubmitted { get; set; }
+    public ICollection<RepairRequest>? RepairRequestsReceived { get; set; }
     
     public string FullName => string.Join(" ", FirstName, LastName, Patronymic);
 }
