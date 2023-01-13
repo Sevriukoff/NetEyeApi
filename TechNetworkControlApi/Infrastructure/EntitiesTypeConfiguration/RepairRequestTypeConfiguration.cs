@@ -13,18 +13,17 @@ public class RepairRequestTypeConfiguration : IEntityTypeConfiguration<RepairReq
     {
         builder.HasKey(x => x.Id);
         
-        builder.Property<int?>("UserToId").IsRequired(false);
+        builder.Property(x => x.UserToId)
+            .IsRequired(false);
         
         builder.HasOne(x => x.UserTo)
             .WithMany(x => x.RepairRequestsReceived)
-            .HasForeignKey("UserToId")
+            .HasForeignKey(x => x.UserToId)
             .IsRequired(false);
 
-        builder.Property<int>("UserFromId");
-        
         builder.HasOne(x => x.UserFrom)
             .WithMany(x => x.RepairRequestsSubmitted)
-            .HasForeignKey("UserFromId");
+            .HasForeignKey(x => x.UserFromId);
 
         builder.HasOne(x => x.TechEquipment);
         builder.Navigation(x => x.TechEquipment).IsRequired();

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechNetworkControlApi.Infrastructure;
 using TechNetworkControlApi.Infrastructure.Entities;
@@ -24,7 +26,8 @@ public class UsersController : ControllerBase
             return Ok(ServerDbContext.Users.ToArray());
         }
         
-        var user = ServerDbContext.Users.FirstOrDefault(u => u.Email == email);
+        var user = ServerDbContext.Users.Include(x => x.RepairRequestsSubmitted)
+            .FirstOrDefault(u => u.Email == email);
 
         return user != null ? Ok(user) : NotFound(user);
     }
