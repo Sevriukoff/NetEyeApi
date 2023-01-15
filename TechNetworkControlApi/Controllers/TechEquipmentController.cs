@@ -54,4 +54,6 @@ public class TechEquipmentController : ControllerBase
         
         return Ok();
     }
+    
+    // HTTP PUT
 }

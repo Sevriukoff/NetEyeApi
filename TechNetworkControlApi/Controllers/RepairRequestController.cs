@@ -36,6 +36,7 @@ public class RepairRequestController : ControllerBase
                     TechIpAddress = x.TechEquipment.IpAddress,
                     UserFromId = x.UserFromId,
                     UserToId = x.UserToId,
+                    Status = x.Status,
                     Description = x.Description
                 }));
         }
@@ -56,6 +57,7 @@ public class RepairRequestController : ControllerBase
             TechIpAddress = repairRequest.TechEquipment.IpAddress,
             UserFromId = repairRequest.UserFromId,
             UserToId = repairRequest.UserToId,
+            Status = repairRequest.Status,
             Description = repairRequest.Description
         });
     }
@@ -111,7 +113,7 @@ public class RepairRequestController : ControllerBase
         }
 
         repairRequest.UserTo = userTo;
-        repairRequest.Status = RepairRequestStatus.Working;
+        repairRequest.Status = (RepairRequestStatus) repairRequestDto.Status;
 
         await ServerDbContext.SaveChangesAsync();
         
