@@ -19,11 +19,13 @@ public class RepairRequestTypeConfiguration : IEntityTypeConfiguration<RepairReq
         builder.HasOne(x => x.UserTo)
             .WithMany(x => x.RepairRequestsReceived)
             .HasForeignKey(x => x.UserToId)
+            .OnDelete(DeleteBehavior.Cascade)
             .IsRequired(false);
 
         builder.HasOne(x => x.UserFrom)
             .WithMany(x => x.RepairRequestsSubmitted)
-            .HasForeignKey(x => x.UserFromId);
+            .HasForeignKey(x => x.UserFromId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.TechEquipment);
         builder.Navigation(x => x.TechEquipment).IsRequired();

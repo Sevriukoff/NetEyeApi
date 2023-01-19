@@ -119,4 +119,21 @@ public class RepairRequestController : ControllerBase
         
         return Ok(repairRequest.Id);
     }
+
+    [HttpDelete]
+    public async Task<IActionResult> Delete([FromQuery] int id)
+    {
+        var repairRequest = await ServerDbContext.RepairRequests.FindAsync(id);
+
+        if (repairRequest == null)
+        {
+            return NotFound();
+        }
+        
+        ServerDbContext.RepairRequests.Remove(repairRequest);
+
+        await ServerDbContext.SaveChangesAsync();
+        
+        return Ok();
+    }
 }

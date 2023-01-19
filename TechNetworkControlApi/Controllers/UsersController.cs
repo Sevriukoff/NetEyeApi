@@ -71,6 +71,23 @@ public class UsersController : ControllerBase
         return Ok();
     }
 
+    [HttpDelete]
+    public async Task<IActionResult> Delete([FromQuery] int id)
+    {
+        var user = await ServerDbContext.Users.FindAsync(id);
+
+        if (user == null)
+        {
+            return NotFound();
+        }
+        
+        ServerDbContext.Users.Remove(user);
+
+        await ServerDbContext.SaveChangesAsync();
+
+        return Ok();
+    }
+
     private UserDto MapUser(User userDto)
     {
         UserDto user = new UserDto()
@@ -80,7 +97,7 @@ public class UsersController : ControllerBase
             Password = userDto.Password,
             FirstName = userDto.FirstName,
             LastName = userDto.LastName,
-            Patronymic = userDto.Password,
+            Patronymic = userDto.Patronymic,
             Phone = userDto.Phone,
             Role = userDto.Role,
             RepairRequestsSubmitted = MapUserRequests(userDto.RepairRequestsSubmitted),
