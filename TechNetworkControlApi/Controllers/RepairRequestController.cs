@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
@@ -8,6 +9,7 @@ using TechNetworkControlApi.Infrastructure.Enums;
 namespace TechNetworkControlApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("/api/[controller]")]
 public class RepairRequestController : ControllerBase
 {
@@ -26,6 +28,8 @@ public class RepairRequestController : ControllerBase
         // Desc
         // Status
 
+        Thread.Sleep(1000);
+
         if (id == null)
         {
             return Ok(ServerDbContext.RepairRequests.Include(x => x.TechEquipment)
@@ -34,8 +38,10 @@ public class RepairRequestController : ControllerBase
                     Id = x.Id,
                     TechEquipmentId = x.TechEquipment.Id,
                     TechIpAddress = x.TechEquipment.IpAddress,
+                    TechType = x.TechEquipment.Type,
                     UserFromId = x.UserFromId,
                     UserToId = x.UserToId,
+                    CreatedDate = x.CreatedDate,
                     Status = x.Status,
                     Description = x.Description
                 }));
@@ -55,10 +61,13 @@ public class RepairRequestController : ControllerBase
             Id = repairRequest.Id,
             TechEquipmentId = repairRequest.TechEquipment.Id,
             TechIpAddress = repairRequest.TechEquipment.IpAddress,
+            TechType = repairRequest.TechEquipment.Type,
             UserFromId = repairRequest.UserFromId,
             UserToId = repairRequest.UserToId,
+            CreatedDate = repairRequest.CreatedDate,
             Status = repairRequest.Status,
-            Description = repairRequest.Description
+            Description = repairRequest.Description,
+            RepairNote = repairRequest.RepairNote,
         });
     }
 
@@ -81,7 +90,7 @@ public class RepairRequestController : ControllerBase
             UserFrom = userFrom,
             UserTo = null,
             Description = repairRequestDto.Description,
-            Status = RepairRequestStatus.Accepted
+            Status = RepairRequestStatus.Pending
         };
 
         ServerDbContext.RepairRequests.Add(repairRequest);
@@ -102,18 +111,33 @@ public class RepairRequestController : ControllerBase
 
         var userTo = await ServerDbContext.Users.FindAsync(repairRequestDto.UserToId);
 
-        if (userTo == null)
+        if ( (repairRequest.Status == RepairRequestStatus.Pending
+            && repairRequestDto.Status == RepairRequestStatus.Cancelled) ||
+            repairRequest.Status == RepairRequestStatus.Cancelled)
         {
-            return NotFound($"User receiver with id {repairRequestDto.UserToId} is not found ");
+            repairRequest.Status = RepairRequestStatus.Cancelled;
         }
-
-        if (userTo.Role == UserRole.User)
+        else
         {
-            return BadRequest("User receiver must be a tech or an admin");
+            if (userTo == null)
+            {
+                return NotFound($"User receiver with id {repairRequestDto.UserToId} is not found ");
+            }
+
+            if (userTo.Role == UserRole.User)
+            {
+                return BadRequest("User receiver must be a tech or an admin");
+            }
         }
 
         repairRequest.UserTo = userTo;
         repairRequest.Status = (RepairRequestStatus) repairRequestDto.Status;
+
+        if (!string.IsNullOrEmpty(repairRequestDto.RepairNote) &&
+            repairRequest.RepairNote != repairRequestDto.RepairNote)
+        {
+            repairRequest.RepairNote = repairRequestDto.RepairNote;
+        }
 
         await ServerDbContext.SaveChangesAsync();
         

@@ -23,8 +23,8 @@ public class ServerDbContext : DbContext
         if (!optionsBuilder.IsConfigured)
         {
             optionsBuilder.UseMySql(
-                $"server=localhost;user id=root;password=;database=u1478686_{DbName}",
-                ServerVersion.Parse("5.7.39-mysql"));
+                $"server=37.140.192.90;user id=u2011310_remote;password=dC2pH6eM9vfV2pK4;database=u2011310_technetwork_control",
+                ServerVersion.Parse("5.7.27-mysql"));
         }
     }
 

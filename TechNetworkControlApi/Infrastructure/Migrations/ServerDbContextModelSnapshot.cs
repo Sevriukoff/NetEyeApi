@@ -34,6 +34,10 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
+                    b.Property<string>("RepairNote")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -42,7 +46,8 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.Property<int>("UserFromId")
+                    b.Property<int?>("UserFromId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<int?>("UserToId")
@@ -130,27 +135,38 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasMaxLength(85)
+                        .HasColumnType("varchar(85)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasMaxLength(85)
+                        .HasColumnType("varchar(85)");
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
 
                     b.Property<string>("Patronymic")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasMaxLength(85)
+                        .HasColumnType("varchar(85)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(11)
                         .HasColumnType("varchar(11)");
+
+                    b.Property<Guid>("RefreshToken")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("RefreshTokenExpirationDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("RegistrationDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP()");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -181,7 +197,8 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
 
                     b.HasOne("TechNetworkControlApi.Infrastructure.Entities.User", "UserTo")
                         .WithMany("RepairRequestsReceived")
-                        .HasForeignKey("UserToId");
+                        .HasForeignKey("UserToId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("TechEquipment");
 

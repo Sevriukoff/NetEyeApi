@@ -31,6 +31,8 @@ public class RepairRequestTypeConfiguration : IEntityTypeConfiguration<RepairReq
         builder.Navigation(x => x.TechEquipment).IsRequired();
 
         builder.Property(x => x.Description).HasMaxLength(500);
+        builder.Property(x => x.RepairNote).HasMaxLength(150)
+            .IsRequired(false);
 
         builder.Property(x => x.CreatedDate)
             .HasColumnType("timestamp")

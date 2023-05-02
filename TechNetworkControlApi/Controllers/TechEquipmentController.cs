@@ -45,8 +45,7 @@ public class TechEquipmentController : ControllerBase
         {
             Id = techEquipmentDto.Id,
             IpAddress = techEquipmentDto.IpAddress,
-            Type = type,
-            Softs = softs
+            Type = type
         };
 
         ServerDbContext.TechEquipments.Add(techEquip);

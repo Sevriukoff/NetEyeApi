@@ -16,12 +16,15 @@ public class UserTypeConfiguration : IEntityTypeConfiguration<User>
             .IsUnique();
         
         builder.Property(x => x.Email).HasMaxLength(100);
-        builder.Property(x => x.FirstName).HasMaxLength(100);
-        builder.Property(x => x.LastName).HasMaxLength(100);
-        builder.Property(x => x.Patronymic).HasMaxLength(100).IsRequired(false);
-        builder.Property(x => x.Password).HasMaxLength(50);
+        builder.Property(x => x.FirstName).HasMaxLength(85);
+        builder.Property(x => x.LastName).HasMaxLength(85);
+        builder.Property(x => x.Patronymic).HasMaxLength(85).IsRequired(false);
+        builder.Property(x => x.Password).HasMaxLength(64);
         builder.Property(x => x.Phone).HasMaxLength(11);
-        builder.Ignore(x => x.FullName);
+
+        builder.Property(x => x.RegistrationDate)
+            .HasColumnType("timestamp")
+            .HasDefaultValueSql("CURRENT_TIMESTAMP()");
 
         //builder.Property(x => x.RepairRequestsSubmitted).IsRequired(false);
         //builder.Property(x => x.RepairRequestsReceived).IsRequired(false);

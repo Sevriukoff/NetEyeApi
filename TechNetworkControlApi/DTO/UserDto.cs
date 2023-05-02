@@ -12,8 +12,17 @@ public class UserDto
     public string? Patronymic { get; set; }
     public string Phone { get; set; }
     public UserRole Role { get; set; }
+    public string? AccessToken { get; set; }
+    public string? RefreshToken { get; set; }
     public ICollection<RepairRequestDto>? RepairRequestsSubmitted { get; set; }
     public ICollection<RepairRequestDto>? RepairRequestsReceived { get; set; }
     
     public string FullName => string.Join(" ", FirstName, LastName, Patronymic);
+}
+
+public class JwtDto
+{
+    public int UserId { get; set; }
+    public string? AccessToken { get; set; }
+    public string RefreshToken { get; set; }
 }

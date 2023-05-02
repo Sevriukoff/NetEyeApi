@@ -16,8 +16,9 @@ public class User
     public string? Patronymic { get; set; }
     public string Phone { get; set; }
     public UserRole Role { get; set; }
+    public DateTime RegistrationDate { get; set; }
+    public Guid RefreshToken { get; set; }
+    public DateTime RefreshTokenExpirationDate { get; set; }
     public ICollection<RepairRequest>? RepairRequestsSubmitted { get; set; }
     public ICollection<RepairRequest>? RepairRequestsReceived { get; set; }
-    
-    public string FullName => string.Join(" ", FirstName, LastName, Patronymic);
 }

@@ -11,6 +11,7 @@ public class RepairRequest
     public User? UserTo { get; set; }
     public int? UserToId { get; set; }
     public string? Description { get; set; }
+    public string RepairNote { get; set; }
     public DateTime CreatedDate { get; set; }
     public RepairRequestStatus Status { get; set; }
 }
