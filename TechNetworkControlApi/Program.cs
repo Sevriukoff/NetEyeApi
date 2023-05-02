@@ -1,12 +1,14 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TechNetworkControlApi.Common;
 using TechNetworkControlApi.Infrastructure;
 using TechNetworkControlApi.Infrastructure.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -32,26 +34,35 @@ builder.Services.AddAuthentication(opt =>
         ValidIssuer = AuthConstants.Issuer,
         ValidAudience = AuthConstants.Audience,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AuthConstants.SecretKey))
+        IssuerSigningKey =
+            new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>(AuthConstants.SecretKey)))
     };
 });
 
 builder.Services.AddAuthorization(opt =>
 {
-    opt.AddPolicy(UserRole.Admin.ToString(), config =>
+    opt.AddPolicy(AuthConstants.UserRoles.Admin, config =>
     {
-        config.RequireClaim(ClaimTypes.Role, "Admin");
+        config.RequireClaim(ClaimTypes.Role, AuthConstants.UserRoles.Admin);
     });
     
-    opt.AddPolicy(UserRole.Tech.ToString(), config =>
+    opt.AddPolicy(AuthConstants.UserRoles.Tech, config =>
     {
         config.RequireAssertion(x =>
-            x.User.HasClaim(ClaimTypes.Role, "Tech") ||
-            x.User.HasClaim(ClaimTypes.Role, "Admin"));
+            x.User.HasClaim(ClaimTypes.Role, AuthConstants.UserRoles.Tech) ||
+            x.User.HasClaim(ClaimTypes.Role, AuthConstants.UserRoles.Admin));
     });
 });
 
-builder.Services.AddTransient<ServerDbContext>();
+builder.Services.AddDbContext<ServerDbContext>(opt =>
+{
+    opt.UseMySql
+        (
+            builder.Configuration.GetConnectionString("MySqlProd"),
+            ServerVersion.Parse("5.7.27-mysql")
+        );
+});
 
 var app = builder.Build();
 

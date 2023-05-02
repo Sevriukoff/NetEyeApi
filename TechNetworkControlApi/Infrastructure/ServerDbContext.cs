@@ -13,19 +13,9 @@ public class ServerDbContext : DbContext
     public DbSet<TechEquipment> TechEquipments { get; set; }
     public DbSet<TechSoft> TechSofts { get; set; }
 
-    public ServerDbContext()
+    public ServerDbContext(DbContextOptions<ServerDbContext> options): base(options)
     {
         
-    }
-    
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseMySql(
-                $"server=37.140.192.90;user id=u2011310_remote;password=dC2pH6eM9vfV2pK4;database=u2011310_technetwork_control",
-                ServerVersion.Parse("5.7.27-mysql"));
-        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

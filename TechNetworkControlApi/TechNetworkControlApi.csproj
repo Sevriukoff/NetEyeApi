@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>latest</LangVersion>
+        <UserSecretsId>c3e114bd-e366-4534-bffa-63b382fc65fe</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
