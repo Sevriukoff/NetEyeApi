@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Nelibur.ObjectMapper;
 using TechNetworkControlApi.Common;
 using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
@@ -25,13 +26,14 @@ public class AuthController : ControllerBase
     {
         _serverDbContext = serverDbContext;
         _config = config;
-        _serverDbContext = serverDbContext;
     }
     
     [HttpGet]
     public async Task<IActionResult> Authorization([FromQuery] string email, [FromQuery] string password)
     {
-        var user = await _serverDbContext.Users.Include(x => x.RepairRequestsSubmitted)
+        var user = await _serverDbContext.Users
+            .Include(x => x.RepairRequestsSubmitted)!
+                .ThenInclude(x => x.TechEquipment)
             .FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
 
         if (user == null)
@@ -42,7 +44,7 @@ public class AuthController : ControllerBase
         user.RefreshToken = Guid.NewGuid();
         user.RefreshTokenExpirationDate = DateTime.Now.AddDays(31);
         
-        var userDto = MapUser(user);
+        var userDto = TinyMapper.Map<AuthUserDto>(user);
         userDto.AccessToken = accessToken;
         userDto.RefreshToken = user.RefreshToken.ToString();
 
@@ -92,7 +94,8 @@ public class AuthController : ControllerBase
         
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, string.Concat(user.LastName, user.FirstName, user.Patronymic)),
+            new(JwtRegisteredClaimNames.Sub,
+                string.Concat(user.LastName, user.FirstName, user.Patronymic)),
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(ClaimTypes.Role, userRoleStr)
         };
@@ -111,38 +114,5 @@ public class AuthController : ControllerBase
         );
 
         return new JwtSecurityTokenHandler().WriteToken(accessToken);
-    }
-    
-    private UserDto MapUser(User userDto)
-    {
-        UserDto user = new UserDto()
-        {
-            Id = userDto.Id,
-            Email = userDto.Email,
-            Password = userDto.Password,
-            FirstName = userDto.FirstName,
-            LastName = userDto.LastName,
-            Patronymic = userDto.Patronymic,
-            Phone = userDto.Phone,
-            Role = userDto.Role,
-            RepairRequestsSubmitted = MapUserRequests(userDto.RepairRequestsSubmitted),
-            RepairRequestsReceived = MapUserRequests(userDto.RepairRequestsReceived)
-        };
-
-        ICollection<RepairRequestDto>? MapUserRequests(ICollection<RepairRequest>? repairRequests)
-        {
-            return repairRequests?.Select(x => new RepairRequestDto
-            {
-                Id = x?.Id,
-                TechEquipmentId = x?.TechEquipment?.Id,
-                TechIpAddress = x?.TechEquipment?.IpAddress,
-                UserFromId = x?.UserFromId,
-                UserToId = x?.UserToId,
-                Status = x?.Status,
-                Description = x?.Description
-            }).ToList();
-        }
-
-        return user;
     }
 }

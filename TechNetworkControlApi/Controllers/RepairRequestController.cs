@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Nelibur.ObjectMapper;
 using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
 using TechNetworkControlApi.Infrastructure.Entities;
@@ -33,18 +34,7 @@ public class RepairRequestController : ControllerBase
         if (id == null)
         {
             return Ok(ServerDbContext.RepairRequests.Include(x => x.TechEquipment)
-                .Select(x => new RepairRequestDto
-                {
-                    Id = x.Id,
-                    TechEquipmentId = x.TechEquipment.Id,
-                    TechIpAddress = x.TechEquipment.IpAddress,
-                    TechType = x.TechEquipment.Type,
-                    UserFromId = x.UserFromId,
-                    UserToId = x.UserToId,
-                    CreatedDate = x.CreatedDate,
-                    Status = x.Status,
-                    Description = x.Description
-                }));
+                .Select(x => TinyMapper.Map<RepairRequestDto>(x)));
         }
 
         var repairRequest = ServerDbContext.RepairRequests
@@ -56,19 +46,7 @@ public class RepairRequestController : ControllerBase
             return NotFound();
         }
         
-        return Ok(new RepairRequestDto
-        {
-            Id = repairRequest.Id,
-            TechEquipmentId = repairRequest.TechEquipment.Id,
-            TechIpAddress = repairRequest.TechEquipment.IpAddress,
-            TechType = repairRequest.TechEquipment.Type,
-            UserFromId = repairRequest.UserFromId,
-            UserToId = repairRequest.UserToId,
-            CreatedDate = repairRequest.CreatedDate,
-            Status = repairRequest.Status,
-            Description = repairRequest.Description,
-            RepairNote = repairRequest.RepairNote,
-        });
+        return Ok(TinyMapper.Map<RepairRequestDto>(repairRequest));
     }
 
     [HttpPost]

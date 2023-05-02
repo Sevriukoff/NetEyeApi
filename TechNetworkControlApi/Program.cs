@@ -1,10 +1,14 @@
+using System.ComponentModel;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Nelibur.ObjectMapper;
 using TechNetworkControlApi.Common;
+using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
+using TechNetworkControlApi.Infrastructure.Entities;
 using TechNetworkControlApi.Infrastructure.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -85,4 +89,19 @@ app.UseEndpoints(endpoints =>
     endpoints.MapControllers();
 });
 
+ConfigureObjectsMapping();
+
 app.Run();
+
+void ConfigureObjectsMapping()
+{
+    TinyMapper.Bind<RepairRequest, RepairRequestDto>(config =>
+    {
+        config.Bind(s => s.TechEquipment.Id, t => t.TechEquipmentId);
+        config.Bind(s => s.TechEquipment.IpAddress, t => t.TechIpAddress);
+        config.Bind(s => s.TechEquipment.Type, t => t.TechType);
+    });
+
+    TinyMapper.Bind<User, AuthUserDto>();
+    TinyMapper.Bind<User, UserDto>();
+}

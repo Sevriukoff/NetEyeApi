@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Nelibur.ObjectMapper;
 using TechNetworkControlApi.Common;
 using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
 using TechNetworkControlApi.Infrastructure.Entities;
 using TechNetworkControlApi.Infrastructure.Enums;
-using TechNetworkControlApi.Services;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace TechNetworkControlApi.Controllers;
@@ -23,46 +23,33 @@ namespace TechNetworkControlApi.Controllers;
 public class UsersController : ControllerBase
 {
     public ServerDbContext ServerDbContext { get; set; }
-    public HashServiceSha256 Sha256 { get; set; } = new HashServiceSha256();
-    
+
     public UsersController(ServerDbContext serverDbContext)
     {
         ServerDbContext = serverDbContext;
     }
-
-    [HttpGet]
-    public IActionResult Get([FromQuery] int? id, [FromQuery] UserRole? role)
+    
+    [Authorize(Policy = AuthConstants.UserRoles.Tech)]
+    [HttpGet("{id:int}")]
+    public IActionResult Get(int id)
     {
-        User? user;
-
-        if (id != null)
-        {
-            user = ServerDbContext.Users
-                .Include(x => x.RepairRequestsReceived)!
-                    .ThenInclude(x => x.TechEquipment)
-                .Include(x => x.RepairRequestsSubmitted)!
-                    .ThenInclude(x => x.TechEquipment)
-                .FirstOrDefault(x => x.Id == id);
+        var user = ServerDbContext.Users
+            .Include(x => x.RepairRequestsReceived)!
+                .ThenInclude(x => x.TechEquipment)
+            .Include(x => x.RepairRequestsSubmitted)!
+                .ThenInclude(x => x.TechEquipment)
+            .FirstOrDefault(x => x.Id == id);
             
-            if (user == null)
-            {
-                return NotFound();
-            }
+        if (user == null)
+            return NotFound();
 
-            return Ok(MapUser(user));
-        }
-        
-        if (role != null)
-        {
-            Thread.Sleep(5000);
-            
-           var users = ServerDbContext.Users.Where(x => x.Role == role)
-                .ToList();
+        return Ok(TinyMapper.Map<UserDto>(user));
+    }
 
-            return Ok(users);
-        }
-
-        return Ok(ServerDbContext.Users.ToArray());
+    [Authorize(Policy = AuthConstants.UserRoles.Admin)]
+    public IActionResult GetAllUsers()
+    {
+        return Ok(ServerDbContext.Users.Select(x => TinyMapper.Map<UserDto>(x)).ToArray());
     }
 
     [HttpPost]
@@ -88,7 +75,7 @@ public class UsersController : ControllerBase
         return NotFound();
     }
 
-    [Authorize(Policy = "Admin")]
+    [Authorize(Policy = AuthConstants.UserRoles.Admin)]
     [HttpDelete]
     public async Task<IActionResult> Delete([FromQuery] int id)
     {
@@ -104,38 +91,5 @@ public class UsersController : ControllerBase
         await ServerDbContext.SaveChangesAsync();
 
         return Ok();
-    }
-
-    private UserDto MapUser(User userDto)
-    {
-        UserDto user = new UserDto()
-        {
-            Id = userDto.Id,
-            Email = userDto.Email,
-            Password = userDto.Password,
-            FirstName = userDto.FirstName,
-            LastName = userDto.LastName,
-            Patronymic = userDto.Patronymic,
-            Phone = userDto.Phone,
-            Role = userDto.Role,
-            RepairRequestsSubmitted = MapUserRequests(userDto.RepairRequestsSubmitted),
-            RepairRequestsReceived = MapUserRequests(userDto.RepairRequestsReceived)
-        };
-
-        ICollection<RepairRequestDto>? MapUserRequests(ICollection<RepairRequest>? repairRequests)
-        {
-            return repairRequests?.Select(x => new RepairRequestDto
-            {
-                Id = x?.Id,
-                TechEquipmentId = x?.TechEquipment?.Id,
-                TechIpAddress = x?.TechEquipment?.IpAddress,
-                UserFromId = x?.UserFromId,
-                UserToId = x?.UserToId,
-                Status = x?.Status,
-                Description = x?.Description
-            }).ToList();
-        }
-
-        return user;
     }
 }
