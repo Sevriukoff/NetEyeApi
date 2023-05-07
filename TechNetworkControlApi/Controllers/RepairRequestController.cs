@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Nelibur.ObjectMapper;
+using TechNetworkControlApi.Common;
 using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
 using TechNetworkControlApi.Infrastructure.Entities;
@@ -21,8 +22,21 @@ public class RepairRequestController : ControllerBase
         ServerDbContext = serverDbContext;
     }
 
+    [HttpGet("{id:int}")]
+    public IActionResult Get(int id)
+    {
+        var repairRequest = ServerDbContext.RepairRequests
+            .Include(x => x.TechEquipment)
+            .FirstOrDefault(x => x.Id == id);
+        
+        if (repairRequest == null)
+            return NotFound($"Repair request with id {id} is not found");
+
+        return Ok(TinyMapper.Map<RepairRequestDto>(repairRequest));
+    }
+
     [HttpGet]
-    public IActionResult Get([FromQuery] int? id)
+    public IActionResult GetAll()
     {
         // TechEquipmentId
         // IpAddress
@@ -31,22 +45,8 @@ public class RepairRequestController : ControllerBase
 
         Thread.Sleep(1000);
 
-        if (id == null)
-        {
-            return Ok(ServerDbContext.RepairRequests.Include(x => x.TechEquipment)
-                .Select(x => TinyMapper.Map<RepairRequestDto>(x)));
-        }
-
-        var repairRequest = ServerDbContext.RepairRequests
-            .Include(x => x.TechEquipment)
-            .FirstOrDefault(x => x.Id == id);
-
-        if (repairRequest == null)
-        {
-            return NotFound();
-        }
-        
-        return Ok(TinyMapper.Map<RepairRequestDto>(repairRequest));
+        return Ok(ServerDbContext.RepairRequests.Include(x => x.TechEquipment)
+            .Select(x => TinyMapper.Map<RepairRequestDto>(x)));
     }
 
     [HttpPost]
@@ -74,7 +74,7 @@ public class RepairRequestController : ControllerBase
         ServerDbContext.RepairRequests.Add(repairRequest);
         await ServerDbContext.SaveChangesAsync();
 
-        return Ok(repairRequest.Id);
+        return CreatedAtAction(nameof(Get), new {id = repairRequest.Id} ,repairRequest.Id);
     }
 
     [HttpPut]
@@ -83,9 +83,7 @@ public class RepairRequestController : ControllerBase
         var repairRequest = await ServerDbContext.RepairRequests.FindAsync(repairRequestDto.Id);
 
         if (repairRequest == null)
-        {
             return NotFound($"Repair request with id {repairRequestDto.Id} is not found");
-        }
 
         var userTo = await ServerDbContext.Users.FindAsync(repairRequestDto.UserToId);
 
@@ -98,18 +96,14 @@ public class RepairRequestController : ControllerBase
         else
         {
             if (userTo == null)
-            {
                 return NotFound($"User receiver with id {repairRequestDto.UserToId} is not found ");
-            }
 
             if (userTo.Role == UserRole.User)
-            {
                 return BadRequest("User receiver must be a tech or an admin");
-            }
         }
 
         repairRequest.UserTo = userTo;
-        repairRequest.Status = (RepairRequestStatus) repairRequestDto.Status;
+        repairRequest.Status = (RepairRequestStatus) repairRequestDto.Status!;
 
         if (!string.IsNullOrEmpty(repairRequestDto.RepairNote) &&
             repairRequest.RepairNote != repairRequestDto.RepairNote)
@@ -122,16 +116,15 @@ public class RepairRequestController : ControllerBase
         return Ok(repairRequest.Id);
     }
 
-    [HttpDelete]
-    public async Task<IActionResult> Delete([FromQuery] int id)
+    [Authorize(Policy = AuthConstants.UserRoles.Admin)]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
     {
         var repairRequest = await ServerDbContext.RepairRequests.FindAsync(id);
 
         if (repairRequest == null)
-        {
             return NotFound();
-        }
-        
+
         ServerDbContext.RepairRequests.Remove(repairRequest);
 
         await ServerDbContext.SaveChangesAsync();

@@ -47,7 +47,8 @@ public class UsersController : ControllerBase
     }
 
     [Authorize(Policy = AuthConstants.UserRoles.Admin)]
-    public IActionResult GetAllUsers()
+    [HttpGet]
+    public IActionResult GetAll()
     {
         return Ok(ServerDbContext.Users.Select(x => TinyMapper.Map<UserDto>(x)).ToArray());
     }
@@ -57,7 +58,8 @@ public class UsersController : ControllerBase
     {
         await ServerDbContext.Users.AddAsync(user);
         await ServerDbContext.SaveChangesAsync();
-        return Ok();
+        
+        return CreatedAtAction(nameof(Get), new {id = user.Id}, user.Id);
     }
 
     [HttpPut]
@@ -76,8 +78,8 @@ public class UsersController : ControllerBase
     }
 
     [Authorize(Policy = AuthConstants.UserRoles.Admin)]
-    [HttpDelete]
-    public async Task<IActionResult> Delete([FromQuery] int id)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
     {
         var user = await ServerDbContext.Users.FindAsync(id);
 

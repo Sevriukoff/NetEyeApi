@@ -1,0 +1,26 @@
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJLb3psb3ZNYXhpbWRtaXRyIiwiZW1haWwiOiJUZWNoQHlhbmRleC5ydSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlRlY2giLCJuYmYiOjE2ODMwNDAzMDQsImV4cCI6MTY4MzA0MTIwNCwiaXNzIjoiaHR0cDovLzUuMTI4LjIyMS4xMzk6NzExOSIsImF1ZCI6Imh0dHA6Ly81LjEyOC4yMjEuMTM5OjcxMTkifQ.oJcWL2l_eLaBXfQzbmqtpMGJdqmii-NbNR0FX19A4eM",
+  "email": "Tech@yandex.ru",
+  "firstName": "Maxim",
+  "fullName": "Maxim Kozlov dmitr",
+  "id": 3,
+  "lastName": "Kozlov",
+  "password": "a320480f534776bddb5cdb54b1e93d210a3c7d199e80a23c1b2178497b184c76",
+  "patronymic": "dmitr",
+  "phone": "79831247944",
+  "refreshToken": "ef0e2fb6-396d-43a5-b356-e1fc3eaad3b7",
+  "registrationDate": "2023-04-12T00:25:58",
+  "repairRequestsSubmitted": [
+    {
+      "createdDate": "2023-04-12T21:57:28",
+      "description": "Не работает ночное зрение ",
+      "id": 3,
+      "status": 0,
+      "techEquipmentId": "348-camera",
+      "techIpAddress": "10.137.200.15",
+      "techType": 2,
+      "userFromId": 3
+    }
+  ],
+  "role": 1
+}

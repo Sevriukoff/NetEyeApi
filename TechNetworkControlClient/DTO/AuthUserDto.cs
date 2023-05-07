@@ -1,6 +1,6 @@
-﻿using TechNetworkControlApi.Infrastructure.Enums;
+﻿using TechNetworkControlClient.Enums;
 
-namespace TechNetworkControlApi.DTO;
+namespace TechNetworkControlClient.DTO;
 
 public class AuthUserDto
 {
@@ -13,10 +13,8 @@ public class AuthUserDto
     public string Phone { get; set; }
     public UserRole Role { get; set; }
     public DateTime RegistrationDate { get; set; }
-    public string? AccessToken { get; set; }
-    public string? RefreshToken { get; set; }
-    public ICollection<RepairRequestDto>? RepairRequestsSubmitted { get; set; }
-    public ICollection<RepairRequestDto>? RepairRequestsReceived { get; set; }
+    public ICollection<RepairRequestDto> RepairRequestsSubmitted { get; set; }
+    public ICollection<RepairRequestDto> RepairRequestsReceived { get; set; }
     
     public string FullName => string.Join(" ", FirstName, LastName, Patronymic);
 }

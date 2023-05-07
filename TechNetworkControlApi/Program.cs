@@ -104,4 +104,6 @@ void ConfigureObjectsMapping()
 
     TinyMapper.Bind<User, AuthUserDto>();
     TinyMapper.Bind<User, UserDto>();
+    TinyMapper.Bind<TechEquipmentDto, TechEquipment>();
+    TinyMapper.Bind<TechEquipment, TechEquipmentDto>();
 }

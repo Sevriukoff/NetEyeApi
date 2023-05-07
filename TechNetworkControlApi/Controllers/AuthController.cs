@@ -56,7 +56,11 @@ public class AuthController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Refresh([FromBody] JwtDto jwtDto)
     {
-        var user = await _serverDbContext.Users.FindAsync(jwtDto.UserId);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.ReadJwtToken(jwtDto.AccessToken);
+        var sub = token.Claims.First(x => x.Type == JwtRegisteredClaimNames.Sub);
+        
+        var user = await _serverDbContext.Users.FindAsync(int.Parse(sub.Value));
 
         if (user == null)
             return NotFound();
@@ -76,7 +80,6 @@ public class AuthController : ControllerBase
         
         return Ok(new JwtDto
         {
-            UserId = user.Id,
             AccessToken = CreateAccessToken(user),
             RefreshToken = refreshToken.ToString() 
         });
@@ -94,8 +97,9 @@ public class AuthController : ControllerBase
         
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub,
-                string.Concat(user.LastName, user.FirstName, user.Patronymic)),
+            new (JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Name,
+                string.Join(" ", user.LastName, user.FirstName, user.Patronymic)),
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(ClaimTypes.Role, userRoleStr)
         };
@@ -109,7 +113,7 @@ public class AuthController : ControllerBase
             AuthConstants.Audience,
             claims, 
             DateTime.Now,
-            DateTime.Now.AddMinutes(15),
+            DateTime.Now.AddMinutes(30),
             new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         );
 
