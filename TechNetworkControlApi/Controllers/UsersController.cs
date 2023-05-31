@@ -53,6 +53,7 @@ public class UsersController : ControllerBase
         return Ok(ServerDbContext.Users.Select(x => TinyMapper.Map<UserDto>(x)).ToArray());
     }
 
+    [Authorize(Policy = AuthConstants.UserRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] User user)
     {
@@ -62,19 +63,21 @@ public class UsersController : ControllerBase
         return CreatedAtAction(nameof(Get), new {id = user.Id}, user.Id);
     }
 
-    [HttpPut]
-    public async Task<IActionResult> Put([FromBody] User user)
+    [HttpPatch]
+    public async Task<IActionResult> Patch([FromBody] UserChangePasswordDto userDto)
     {
-        var dbUser = await ServerDbContext.Users.FindAsync(user.Id);
+        var dbUser = await ServerDbContext.Users.FindAsync(userDto.Id);
 
-        if (dbUser != null)
-        {
-            dbUser.Password = user.Password;
-            await ServerDbContext.SaveChangesAsync();
-            return Ok();
-        }
+        if (dbUser == null)
+            return NotFound();
         
-        return NotFound();
+        if (dbUser.Password != userDto.OldPassword)
+            return BadRequest();
+
+        dbUser.Password = userDto.NewPassword;
+        await ServerDbContext.SaveChangesAsync();
+        return Ok(TinyMapper.Map<AuthUserDto>(dbUser));
+
     }
 
     [Authorize(Policy = AuthConstants.UserRoles.Admin)]
@@ -84,10 +87,8 @@ public class UsersController : ControllerBase
         var user = await ServerDbContext.Users.FindAsync(id);
 
         if (user == null)
-        {
             return NotFound();
-        }
-        
+
         ServerDbContext.Users.Remove(user);
 
         await ServerDbContext.SaveChangesAsync();

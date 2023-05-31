@@ -17,8 +17,8 @@ public class User
     public string Phone { get; set; }
     public UserRole Role { get; set; }
     public DateTime RegistrationDate { get; set; }
-    public Guid RefreshToken { get; set; }
-    public DateTime RefreshTokenExpirationDate { get; set; }
+    public Guid? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpirationDate { get; set; }
     public ICollection<RepairRequest>? RepairRequestsSubmitted { get; set; }
     public ICollection<RepairRequest>? RepairRequestsReceived { get; set; }
 }
