@@ -43,7 +43,7 @@ public class RepairRequestController : ControllerBase
         // Desc
         // Status
 
-        Thread.Sleep(1000);
+        Thread.Sleep(350);
 
         return Ok(ServerDbContext.RepairRequests.Include(x => x.TechEquipment)
             .Select(x => TinyMapper.Map<RepairRequestDto>(x)));
@@ -113,7 +113,7 @@ public class RepairRequestController : ControllerBase
 
         await ServerDbContext.SaveChangesAsync();
         
-        return Ok(repairRequest.Id);
+        return NoContent();
     }
 
     [Authorize(Policy = AuthConstants.UserRoles.Admin)]
@@ -123,12 +123,12 @@ public class RepairRequestController : ControllerBase
         var repairRequest = await ServerDbContext.RepairRequests.FindAsync(id);
 
         if (repairRequest == null)
-            return NotFound();
+            return NotFound($"Repair request with id {id} is not found");
 
         ServerDbContext.RepairRequests.Remove(repairRequest);
 
         await ServerDbContext.SaveChangesAsync();
         
-        return Ok();
+        return NoContent();
     }
 }

@@ -16,5 +16,9 @@ public class TechEquipmentTypeConfiguration : IEntityTypeConfiguration<TechEquip
         builder.Property(x => x.Type)
             .HasConversion(x => x.ToString(),
                 x => Enum.Parse<TechType>(x));
+
+        builder.Property(x => x.RegistrationDate)
+            .HasColumnType("timestamp")
+            .HasDefaultValueSql("CURRENT_TIMESTAMP()");
     }
 }
