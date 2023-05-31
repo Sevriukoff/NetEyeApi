@@ -74,6 +74,11 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
+                    b.Property<DateTime>("RegistrationDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP()");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -157,10 +162,10 @@ namespace TechNetworkControlApi.Infrastructure.Migrations
                         .HasMaxLength(11)
                         .HasColumnType("varchar(11)");
 
-                    b.Property<Guid>("RefreshToken")
+                    b.Property<Guid?>("RefreshToken")
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime>("RefreshTokenExpirationDate")
+                    b.Property<DateTime?>("RefreshTokenExpirationDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("RegistrationDate")

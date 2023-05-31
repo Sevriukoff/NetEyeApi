@@ -28,64 +28,123 @@ public class AuthController : ControllerBase
         _config = config;
     }
     
-    [HttpGet]
+    [HttpGet("by-credentials")]
     public async Task<IActionResult> Authorization([FromQuery] string email, [FromQuery] string password)
     {
         var user = await _serverDbContext.Users
             .Include(x => x.RepairRequestsSubmitted)!
                 .ThenInclude(x => x.TechEquipment)
-            .FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
+            .FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user == null)
+            return NotFound($"User with email {email} is not found");
+
+        if (user.Password != password)
+            return NotFound("User password is not correct");
+
+        var userAccessToken = CreateAccessToken(user);
+
+        user.RefreshToken = Guid.NewGuid();
+        user.RefreshTokenExpirationDate = AuthConstants.RefreshTokenExpiresDateTime;
+        
+        var userDto = TinyMapper.Map<AuthUserDto>(user);
+
+        await _serverDbContext.SaveChangesAsync();
+        
+        Response.Headers.Append(AuthConstants.AccessToken, userAccessToken.GetString());
+        Response.Headers.Append(AuthConstants.RefreshToken, user.RefreshToken.ToString());
+        
+        SetAccessToken(userAccessToken);
+        SetRefreshToken(user.RefreshToken.Value, user.RefreshTokenExpirationDate.Value);
+        
+        return Ok(userDto);
+    }
+
+    [HttpGet("by-cookie")]
+    public IActionResult Authorization([FromCookie] string refresh_token)
+    {
+        var user = _serverDbContext.Users
+            .Include(x => x.RepairRequestsSubmitted)!
+                .ThenInclude(x => x.TechEquipment)
+            .FirstOrDefault(x => x.RefreshToken.ToString() == refresh_token);
 
         if (user == null)
             return NotFound();
 
-        var accessToken = CreateAccessToken(user);
+        if (user.RefreshTokenExpirationDate < DateTime.Now)
+            return BadRequest("Need authorization");
 
-        user.RefreshToken = Guid.NewGuid();
-        user.RefreshTokenExpirationDate = DateTime.Now.AddDays(31);
-        
         var userDto = TinyMapper.Map<AuthUserDto>(user);
-        userDto.AccessToken = accessToken;
-        userDto.RefreshToken = user.RefreshToken.ToString();
-
-        await _serverDbContext.SaveChangesAsync();
         
         return Ok(userDto);
     }
     
     [HttpPut]
-    public async Task<IActionResult> Refresh([FromBody] JwtDto jwtDto)
+    public async Task<IActionResult> Refresh([FromCookie] string refresh_token)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.ReadJwtToken(jwtDto.AccessToken);
-        var sub = token.Claims.First(x => x.Type == JwtRegisteredClaimNames.Sub);
-        
-        var user = await _serverDbContext.Users.FindAsync(int.Parse(sub.Value));
+        var user = await _serverDbContext.Users
+            .FirstOrDefaultAsync(x => x.RefreshToken.ToString() == refresh_token);
 
         if (user == null)
             return NotFound();
 
-        bool isTokenValid = user.RefreshToken == Guid.Parse(jwtDto.RefreshToken) &&
+        bool isTokenValid = user.RefreshToken == Guid.Parse(refresh_token) &&
                                 user.RefreshTokenExpirationDate > DateTime.Now;
 
         if (!isTokenValid)
             return BadRequest();
 
-        var refreshToken = Guid.NewGuid();
+        var userAccessToken = CreateAccessToken(user);
+        var userRefreshToken = Guid.NewGuid();
 
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpirationDate = DateTime.Now.AddDays(31);
+        user.RefreshToken = userRefreshToken;
+        user.RefreshTokenExpirationDate = AuthConstants.RefreshTokenExpiresDateTime;
 
         await _serverDbContext.SaveChangesAsync();
         
-        return Ok(new JwtDto
+        SetAccessToken(userAccessToken);
+        SetRefreshToken(user.RefreshToken.Value, user.RefreshTokenExpirationDate.Value);
+        
+        return NoContent();
+    }
+
+    [HttpHead]
+    public IActionResult CheckAuthorization()
+    {
+        bool isExistAccessToken = Request.Cookies.ContainsKey(AuthConstants.AccessToken);
+        bool isExistRefreshToken = Request.Cookies.ContainsKey(AuthConstants.RefreshToken);
+
+        if (!isExistRefreshToken)
+            return Unauthorized();
+
+        return Ok();
+    }
+
+    private void SetAccessToken(JwtSecurityToken accessToken)
+    {
+        Response.Cookies.Append(AuthConstants.AccessToken, accessToken.GetString(), new CookieOptions
         {
-            AccessToken = CreateAccessToken(user),
-            RefreshToken = refreshToken.ToString() 
+            HttpOnly = false,
+            Expires = accessToken.ValidTo,
+            Secure = false,
+            SameSite = SameSiteMode.Strict,
         });
     }
 
-    private string CreateAccessToken(User user)
+    private void SetRefreshToken(Guid refreshToken, DateTime expires)
+    {
+        Response.Cookies.Append(AuthConstants.RefreshToken, refreshToken.ToString(), new CookieOptions
+        {
+            IsEssential = true,
+            HttpOnly = true,
+            Expires = expires,
+            Secure = false,
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/auth"
+        });
+    }
+    
+    private JwtSecurityToken CreateAccessToken(User user)
     {
         var userRoleStr = user.Role switch
         {
@@ -113,10 +172,10 @@ public class AuthController : ControllerBase
             AuthConstants.Audience,
             claims, 
             DateTime.Now,
-            DateTime.Now.AddMinutes(30),
+            AuthConstants.AccessTokenExpiresDateTime,
             new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(accessToken);
+        return accessToken;
     }
 }
