@@ -1,8 +1,6 @@
-﻿using System.Net;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Nelibur.ObjectMapper;
 using TechNetworkControlApi.Common;
 using TechNetworkControlApi.DTO;

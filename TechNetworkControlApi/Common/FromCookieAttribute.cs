@@ -1,19 +1,6 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace TechNetworkControlApi.DTO;
-
-public class JwtDto
-{
-    public string? AccessToken { get; set; }
-    public string RefreshToken { get; set; }
-}
-
-public class JwtHeaderDto
-{
-    public string? access_token { get; set; }
-    public string refresh_token { get; set; }
-}
+namespace TechNetworkControlApi.Common;
 
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
 public class FromCookieAttribute : Attribute, IBindingSourceMetadata, IModelNameProvider
