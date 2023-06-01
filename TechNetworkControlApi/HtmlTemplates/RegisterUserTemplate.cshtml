@@ -1,12 +1,74 @@
-@model TechNetworkControlApi.Infrastructure.Entities.User
-
-<h5>
-    Здравствуйте уважаемый(ая) @Model.LastName @Model.FirstName @Model.Patronymic, вас зарегистрировали в системе учета сетевого оборудования 'Tech Network Control'.<br>
-    Ваши учетные данные для входа в приложение:<br>
-    Почта: @Model.Email<br>
-    Пароль по умолчанию: Passw0rd, чтобы изменить его авторизуйтесь в системе<br>
-    Номер телефона: @Model.Phone<br>
-    Права доступа: @Model.Role<br>
-    Ссылка на скачивание: https://disk.yandex.ru/d/Nb2t_7hJu84djg.<br>
-    QR ссылка находится во вложении.
-</h5>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            margin-bottom: 10px;
+        }
+        
+        strong {
+            font-weight: bold;
+        }
+        
+        .details {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+        }
+        
+        .download-link {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .download-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<h1>Здравствуйте, уважаемый(ая) @Model.LastName @Model.FirstName @Model.Patronymic,</h1>
+<p>Вас зарегистрировали в системе обзора состояния сетевого оборудования 'Net-Eye'.</p>
+<div class="details">
+    <p>
+        <strong>Ваши учетные данные для входа в приложение:</strong>
+    </p>
+    <p>
+        <strong>Почта:</strong> @Model.Email
+    </p>
+    <p>
+        <strong>Пароль по умолчанию:</strong> Passw0rd
+    </p>
+    <p>
+        Чтобы изменить пароль, авторизуйтесь в системе.
+    </p>
+    <p>
+        <strong>Номер телефона:</strong> @Model.Phone
+    </p>
+    <p>
+        <strong>Права доступа:</strong> @Model.Role
+    </p>
+    <p>
+        <strong>Ссылка на скачивание:</strong>
+        <a href="https://disk.yandex.ru/d/Nb2t_7hJu84djg" class="download-link">https://disk.yandex.ru/d/Nb2t_7hJu84djg</a>
+    </p>
+    <p>
+        QR ссылка находится во вложении.
+    </p>
+</div>
+</body>
+</html>

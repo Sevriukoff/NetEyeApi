@@ -1,4 +1,5 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Dynamic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -24,25 +25,25 @@ namespace TechNetworkControlApi.Controllers;
 [Route("/api/[controller]")]
 public class UsersController : ControllerBase
 {
-    public ServerDbContext ServerDbContext { get; set; }
-    public IEmailService EmailService { get; set; }
-    public IRazorLightEngine RazorLightEngine { get; set; }
-    public IWebHostEnvironment WebHostEnvironment { get; set; }
+    private readonly ServerDbContext _serverDbContext;
+    private readonly IEmailService _emailService;
+    private readonly IRazorLightEngine _razorLightEngine;
+    private readonly IWebHostEnvironment _hostEnvironment;
 
     public UsersController(ServerDbContext serverDbContext, IEmailService emailService,
-        IRazorLightEngine razorLightEngine, IWebHostEnvironment webHostEnvironment)
+        IRazorLightEngine razorLightEngine, IWebHostEnvironment hostEnvironment)
     {
-        ServerDbContext = serverDbContext;
-        EmailService = emailService;
-        WebHostEnvironment = webHostEnvironment;
-        RazorLightEngine = razorLightEngine;
+        _serverDbContext = serverDbContext;
+        _emailService = emailService;
+        _razorLightEngine = razorLightEngine;
+        _hostEnvironment = hostEnvironment;
     }
     
     [Authorize(Policy = AuthConstants.UserRoles.Tech)]
     [HttpGet("{id:int}")]
     public IActionResult Get(int id)
     {
-        var user = ServerDbContext.Users
+        var user = _serverDbContext.Users
             .Include(x => x.RepairRequestsReceived)!
                 .ThenInclude(x => x.TechEquipment)
             .Include(x => x.RepairRequestsSubmitted)!
@@ -59,19 +60,19 @@ public class UsersController : ControllerBase
     [HttpGet]
     public IActionResult GetAll()
     {
-        return Ok(ServerDbContext.Users.Select(x => TinyMapper.Map<UserDto>(x)).ToArray());
+        return Ok(_serverDbContext.Users.Select(x => TinyMapper.Map<UserDto>(x)).ToArray());
     }
 
     [Authorize(Policy = AuthConstants.UserRoles.Admin)]
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] User user)
     {
-        await ServerDbContext.Users.AddAsync(user);
-        await ServerDbContext.SaveChangesAsync();
+        await _serverDbContext.Users.AddAsync(user);
+        await _serverDbContext.SaveChangesAsync();
 
-        var renderTemplate = await RazorLightEngine.CompileRenderAsync("RegisterUserTemplate.cshtml", user);
-
-        EmailService.SendEmail(user.Email, "Регистрация в системе Net-Eye", renderTemplate);
+        var renderTemplate = await _razorLightEngine.CompileRenderAsync("RegisterUserTemplate.cshtml", user);
+        await _emailService.SendEmailWithAttachmentsAsync(user.Email, "Регистрация в системе Net-Eye", renderTemplate,
+            Path.Combine(_hostEnvironment.ContentRootPath, "HtmlTemplates/Resources/QrCodeMobileApp.png"));
         
         return CreatedAtAction(nameof(Get), new {id = user.Id}, user.Id);
     }
@@ -79,7 +80,7 @@ public class UsersController : ControllerBase
     [HttpPatch]
     public async Task<IActionResult> Patch([FromBody] UserChangePasswordDto userDto)
     {
-        var dbUser = await ServerDbContext.Users.FindAsync(userDto.Id);
+        var dbUser = await _serverDbContext.Users.FindAsync(userDto.Id);
 
         if (dbUser == null)
             return NotFound();
@@ -88,23 +89,28 @@ public class UsersController : ControllerBase
             return BadRequest();
 
         dbUser.Password = userDto.NewPassword;
-        await ServerDbContext.SaveChangesAsync();
-        return Ok(TinyMapper.Map<AuthUserDto>(dbUser));
+        await _serverDbContext.SaveChangesAsync();
 
+        var renderTemplate = await _razorLightEngine.CompileRenderAsync("ResetPasswordTemplate.cshtml", dbUser);
+        await _emailService.SendEmailAsync(dbUser.Email, "Сброс пароля", renderTemplate);
+        
+        return Ok(TinyMapper.Map<AuthUserDto>(dbUser));
     }
 
     [Authorize(Policy = AuthConstants.UserRoles.Admin)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var user = await ServerDbContext.Users.FindAsync(id);
+        var user = await _serverDbContext.Users.FindAsync(id);
 
         if (user == null)
             return NotFound();
 
-        ServerDbContext.Users.Remove(user);
+        _serverDbContext.Users.Remove(user);
+        await _serverDbContext.SaveChangesAsync();
 
-        await ServerDbContext.SaveChangesAsync();
+        var renderTemplate = await _razorLightEngine.CompileRenderAsync("DeleteUserTemplate.cshtml", user);
+        await _emailService.SendEmailAsync(user.Email, "Ваша учётная запись удалена", renderTemplate);
 
         return Ok();
     }
