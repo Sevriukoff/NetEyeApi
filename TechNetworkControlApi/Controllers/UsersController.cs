@@ -8,11 +8,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Nelibur.ObjectMapper;
+using RazorLight;
 using TechNetworkControlApi.Common;
 using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
 using TechNetworkControlApi.Infrastructure.Entities;
 using TechNetworkControlApi.Infrastructure.Enums;
+using TechNetworkControlApi.Services;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace TechNetworkControlApi.Controllers;
@@ -23,10 +25,17 @@ namespace TechNetworkControlApi.Controllers;
 public class UsersController : ControllerBase
 {
     public ServerDbContext ServerDbContext { get; set; }
+    public IEmailService EmailService { get; set; }
+    public IRazorLightEngine RazorLightEngine { get; set; }
+    public IWebHostEnvironment WebHostEnvironment { get; set; }
 
-    public UsersController(ServerDbContext serverDbContext)
+    public UsersController(ServerDbContext serverDbContext, IEmailService emailService,
+        IRazorLightEngine razorLightEngine, IWebHostEnvironment webHostEnvironment)
     {
         ServerDbContext = serverDbContext;
+        EmailService = emailService;
+        WebHostEnvironment = webHostEnvironment;
+        RazorLightEngine = razorLightEngine;
     }
     
     [Authorize(Policy = AuthConstants.UserRoles.Tech)]
@@ -59,6 +68,10 @@ public class UsersController : ControllerBase
     {
         await ServerDbContext.Users.AddAsync(user);
         await ServerDbContext.SaveChangesAsync();
+
+        var renderTemplate = await RazorLightEngine.CompileRenderAsync("RegisterUserTemplate.cshtml", user);
+
+        EmailService.SendEmail(user.Email, "Регистрация в системе Net-Eye", renderTemplate);
         
         return CreatedAtAction(nameof(Get), new {id = user.Id}, user.Id);
     }

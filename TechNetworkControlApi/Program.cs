@@ -6,10 +6,14 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Nelibur.ObjectMapper;
+using RazorLight;
+using RazorLight.Compilation;
+using RazorLight.Extensions;
 using TechNetworkControlApi.Common;
 using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
 using TechNetworkControlApi.Infrastructure.Entities;
+using TechNetworkControlApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,6 +94,19 @@ builder.Services.AddDbContext<ServerDbContext>(opt =>
             ServerVersion.Parse("5.7.27-mysql")
         );
 });
+var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "HtmlTemplates");
+
+builder.Services.AddSingleton<IRazorLightEngine>(provider =>
+{
+    var engine = new RazorLightEngineBuilder()
+        .UseFileSystemProject(templatePath)
+        .Build();
+            
+    return engine;
+});
+
+
+builder.Services.AddTransient<IEmailService, EmailService>();
 
 #region Sertificate
 
