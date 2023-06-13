@@ -67,6 +67,11 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] User user)
     {
+        bool isValidEmail = !_serverDbContext.Users.Any(x => x.Email == user.Email);
+
+        if (!isValidEmail)
+            return BadRequest("Email already exist");
+
         await _serverDbContext.Users.AddAsync(user);
         await _serverDbContext.SaveChangesAsync();
 

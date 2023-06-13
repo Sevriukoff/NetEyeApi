@@ -17,6 +17,18 @@ using TechNetworkControlApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#region Configuration
+
+builder.Host.ConfigureAppConfiguration(x => x.AddJsonFile("Config/settings.json", false, true));
+
+builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
+builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection("Auth"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+
+#endregion
+
+#region Controllers
+
 builder.Services.AddControllers(opt =>
     {
         opt.ValueProviderFactories.Add(new CookieValueProviderFactory());
@@ -25,11 +37,20 @@ builder.Services.AddControllers(opt =>
     {
         options.JsonSerializerOptions.IgnoreNullValues = true;
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-    });
+    }
+);
+
+#endregion
+
+#region Swagger
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
+
+#endregion
+
+#region Authentication
 
 builder.Services.AddAuthentication(opt =>
 {
@@ -42,19 +63,19 @@ builder.Services.AddAuthentication(opt =>
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
-        ValidIssuer = AuthConstants.Issuer,
-        ValidAudience = AuthConstants.Audience,
+        ValidIssuer = builder.Configuration["Auth:Issuer"],
+        ValidAudience = builder.Configuration["Auth:Audience"],
         ValidateIssuerSigningKey = true,
         IssuerSigningKey =
             new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>(AuthConstants.SecretKey)))
+                Encoding.UTF8.GetBytes(builder.Configuration["Auth:JwtSecretKey"]))
     };
 
     opt.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
-            if (context.Request.Cookies.TryGetValue("access_token", out string token))
+            if (context.Request.Cookies.TryGetValue(AuthConstants.AccessToken, out string token))
             {
                 context.Token = token;
             }
@@ -62,6 +83,10 @@ builder.Services.AddAuthentication(opt =>
         }
     };
 });
+
+#endregion
+
+#region Authorization
 
 builder.Services.AddAuthorization(opt =>
 {
@@ -81,19 +106,24 @@ builder.Services.AddAuthorization(opt =>
     {
         config.RequireAssertion(
             x => x.User.HasClaim(ClaimTypes.Role, AuthConstants.UserRoles.User) || 
-            x.User.HasClaim(ClaimTypes.Role, AuthConstants.UserRoles.Tech) ||
-            x.User.HasClaim(ClaimTypes.Role, AuthConstants.UserRoles.Admin));
+                 x.User.HasClaim(ClaimTypes.Role, AuthConstants.UserRoles.Tech) ||
+                 x.User.HasClaim(ClaimTypes.Role, AuthConstants.UserRoles.Admin));
     });
 });
+
+#endregion
+
+#region DependencyInjections
 
 builder.Services.AddDbContext<ServerDbContext>(opt =>
 {
     opt.UseMySql
-        (
-            builder.Configuration.GetConnectionString("MySqlProd"),
-            ServerVersion.Parse("5.7.27-mysql")
-        );
+    (
+        builder.Configuration.GetConnectionString("MySqlProd"),
+        ServerVersion.Parse("5.7.27-mysql")
+    );
 });
+
 var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "HtmlTemplates");
 
 builder.Services.AddSingleton<IRazorLightEngine>(provider =>
@@ -105,8 +135,9 @@ builder.Services.AddSingleton<IRazorLightEngine>(provider =>
     return engine;
 });
 
-
 builder.Services.AddTransient<IEmailService, EmailService>();
+
+#endregion
 
 #region Sertificate
 

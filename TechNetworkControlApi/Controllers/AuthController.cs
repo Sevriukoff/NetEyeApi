@@ -4,13 +4,16 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Nelibur.ObjectMapper;
+using RazorLight;
 using TechNetworkControlApi.Common;
 using TechNetworkControlApi.DTO;
 using TechNetworkControlApi.Infrastructure;
 using TechNetworkControlApi.Infrastructure.Entities;
 using TechNetworkControlApi.Infrastructure.Enums;
+using TechNetworkControlApi.Services;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace TechNetworkControlApi.Controllers;
@@ -19,14 +22,29 @@ namespace TechNetworkControlApi.Controllers;
 [Route("/api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly ServerDbContext _serverDbContext;
-    private readonly IConfiguration _config;
+    #region Fields
     
-    public AuthController(ServerDbContext serverDbContext, IConfiguration config)
+    private readonly ServerDbContext _serverDbContext;
+    private readonly IOptions<AuthSettings> _authConfig;
+    private readonly IEmailService _emailService;
+    private readonly IHostEnvironment _hostEnvironment;
+    private readonly IRazorLightEngine _razorLightEngine;
+    
+    #endregion
+    
+    public AuthController(ServerDbContext serverDbContext, IOptions<AuthSettings> authConfig, IEmailService emailService,
+        IHostEnvironment hostEnvironment, IRazorLightEngine razorLightEngine)
     {
         _serverDbContext = serverDbContext;
-        _config = config;
+        _authConfig = authConfig;
+        _emailService = emailService;
+        _hostEnvironment = hostEnvironment;
+        _razorLightEngine = razorLightEngine;
     }
+
+    #region HttpMethods
+
+    #region GetByCredentials
     
     [HttpGet("by-credentials")]
     public async Task<IActionResult> Authorization([FromQuery] string email, [FromQuery] string password)
@@ -59,7 +77,11 @@ public class AuthController : ControllerBase
         
         return Ok(userDto);
     }
+    
+    #endregion
 
+    #region GetByCookie
+    
     [HttpGet("by-cookie")]
     public IActionResult Authorization([FromCookie] string refresh_token)
     {
@@ -79,6 +101,30 @@ public class AuthController : ControllerBase
         return Ok(userDto);
     }
     
+    #endregion
+
+    #region Post
+    
+    // TODO: Refactoring, before 21.06.23
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody] UserDto registerRequest)
+    {
+        bool isValidEmail = !_serverDbContext.Users.Any(x => x.Email == registerRequest.Email);
+
+        if (!isValidEmail)
+            return BadRequest($"User with email {registerRequest.Email} already exist");
+
+        var renderTemplate =
+            await _razorLightEngine.CompileRenderAsync("RegisterRequestUserTemplate.cshtml", registerRequest);
+        await _emailService.SendEmailAsync(_emailService.CorporationEmail, "Запрос на регистрацию", renderTemplate);
+
+        return Ok();
+    }
+    
+    #endregion
+
+    #region Put
+
     [HttpPut]
     public async Task<IActionResult> Refresh([FromCookie] string refresh_token)
     {
@@ -107,7 +153,11 @@ public class AuthController : ControllerBase
         
         return NoContent();
     }
+    
+    #endregion
 
+    #region Head
+    
     [HttpHead]
     public IActionResult CheckAuthorization()
     {
@@ -119,12 +169,18 @@ public class AuthController : ControllerBase
 
         return Ok();
     }
+    
+    #endregion
+    
+    #endregion
 
+    #region PrivateMethods
+    
     private void SetAccessToken(JwtSecurityToken accessToken)
     {
         Response.Cookies.Append(AuthConstants.AccessToken, accessToken.GetString(), new CookieOptions
         {
-            HttpOnly = false,
+            HttpOnly = true,
             Expires = accessToken.ValidTo,
             Secure = false,
             SameSite = SameSiteMode.Strict,
@@ -163,13 +219,13 @@ public class AuthController : ControllerBase
             new(ClaimTypes.Role, userRoleStr)
         };
 
-        var keyStr = _config.GetValue<string>(AuthConstants.SecretKey);
+        var keyStr = _authConfig.Value.JwtSecretKey;
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyStr));
         
         var accessToken = new JwtSecurityToken
         (
-            AuthConstants.Issuer,
-            AuthConstants.Audience,
+            _authConfig.Value.Issuer,
+            _authConfig.Value.Audience,
             claims, 
             DateTime.Now,
             AuthConstants.AccessTokenExpiresDateTime,
@@ -178,4 +234,6 @@ public class AuthController : ControllerBase
 
         return accessToken;
     }
+    
+    #endregion
 }

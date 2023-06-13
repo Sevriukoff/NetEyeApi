@@ -87,8 +87,6 @@ public class TechEquipmentController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] TechEquipmentWithSoftDto techEquipmentDto)
     {
-        Thread.Sleep(3000);
-        
         var isValidIp = Regex.IsMatch(techEquipmentDto.IpAddress, "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$");
         var isValidId = await ServerDbContext.TechEquipments.FindAsync(techEquipmentDto.Id) == null;
 

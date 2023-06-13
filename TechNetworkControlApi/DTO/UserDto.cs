@@ -11,7 +11,7 @@ public class UserDto
     public string? Patronymic { get; set; }
     public string Phone { get; set; }
     public UserRole Role { get; set; }
-    public DateTime RegistrationDate { get; set; }
+    public DateTime? RegistrationDate { get; set; }
     
     public string FullName => string.Join(" ", FirstName, LastName, Patronymic);
 }

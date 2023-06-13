@@ -1,0 +1,15 @@
+﻿{
+  "ConnectionStrings": {
+    "MySqlProd": "*********"
+  },
+  "Auth": {
+    "JwtSecretKey": "*********",
+    "Issuer": "*********",
+    "Audience": "*********"
+  },
+  "Email": {
+    "RobotLogin": "*********",
+    "RobotPassword": "*********",
+    "CorporationEmail": "*********"
+  }
+}
